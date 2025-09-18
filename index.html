@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Admin - CodeMaster</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      :root {
+        --bg-primary: #0a0a0f;
+        --bg-secondary: #13131f;
+        --bg-card: #16161f;
+        --primary: #7c3aed;
+        --secondary: #06b6d4;
+        --success: #10b981;
+        --error: #ef4444;
+        --warning: #f59e0b;
+        --text-primary: #f1f5f9;
+        --text-secondary: #94a3b8;
+        --border: #2a2a3e;
+        --shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+      }
+
+      body {
+        font-family: 'Inter', sans-serif;
+        background: var(--bg-primary);
+        color: var(--text-primary);
+        min-height: 100vh;
+        padding: 20px;
+      }
+
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+      }
+
+      h1 {
+        font-size: 2.5rem;
+        background: linear-gradient(135deg, #7c3aed 0%, #06b6d4 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        margin-bottom: 30px;
+      }
+
+      .actions {
+        display: flex;
+        gap: 15px;
+        margin-bottom: 30px;
+      }
+
+      .btn {
+        padding: 12px 24px;
+        border: none;
+        border-radius: 10px;
+        cursor: pointer;
+        font-weight: 600;
+        transition: all 0.3s ease;
+      }
+
+      .btn-primary {
+        background: linear-gradient(135deg, #7c3aed 0%, #06b6d4 100%);
+        color: white;
+      }
+
+      .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(124, 58, 237, 0.4);
+      }
+
+      .modules-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+        gap: 20px;
+      }
+
+      .module-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        padding: 20px;
+        transition: all 0.3s ease;
+      }
+
+      .module-card:hover {
+        border-color: var(--primary);
+        box-shadow: 0 10px 30px rgba(124, 58, 237, 0.2);
+      }
+
+      .module-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: start;
+        margin-bottom: 15px;
+      }
+
+      .module-title {
+        font-size: 1.3rem;
+        font-weight: 600;
+      }
+
+      .module-icon {
+        font-size: 2rem;
+      }
+
+      .module-subtitle {
+        color: var(--text-secondary);
+        margin-bottom: 15px;
+      }
+
+      .module-actions {
+        display: flex;
+        gap: 10px;
+      }
+
+      .btn-small {
+        padding: 8px 16px;
+        font-size: 14px;
+      }
+
+      .btn-edit {
+        background: var(--warning);
+        color: white;
+      }
+
+      .btn-delete {
+        background: var(--error);
+        color: white;
+      }
+
+      .modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.8);
+        z-index: 1000;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .modal.show {
+        display: flex;
+      }
+
+      .modal-content {
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: 20px;
+        padding: 30px;
+        max-width: 800px;
+        width: 90%;
+        max-height: 90vh;
+        overflow-y: auto;
+      }
+
+      .form-group {
+        margin-bottom: 20px;
+      }
+
+      label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: 500;
+        color: var(--text-secondary);
+      }
+
+      input,
+      textarea {
+        width: 100%;
+        padding: 12px;
+        background: var(--bg-secondary);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        color: var(--text-primary);
+        font-family: inherit;
+      }
+
+      textarea {
+        min-height: 200px;
+        font-family: 'Courier New', monospace;
+      }
+
+      .form-actions {
+        display: flex;
+        gap: 10px;
+        justify-content: flex-end;
+        margin-top: 30px;
+      }
+
+      .json-editor {
+        background: var(--bg-primary);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 15px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>🎯 Panel de Administración - StugyDevs</h1>
+
+      <div class="actions">
+        <button class="btn btn-primary" onclick="openCreateModal()">
+          ➕ Crear Nuevo Módulo
+        </button>
+        <button class="btn btn-primary" onclick="loadModules()">
+          🔄 Actualizar
+        </button>
+      </div>
+
+      <div class="modules-grid" id="modulesGrid">
+        <!-- Los módulos se cargarán aquí -->
+      </div>
+    </div>
+
+    <!-- Modal para crear/editar módulo -->
+    <div class="modal" id="moduleModal">
+      <div class="modal-content">
+        <h2 id="modalTitle">Crear Nuevo Módulo</h2>
+
+        <div class="form-group">
+          <label for="moduleTitle">Título del Módulo</label>
+          <input
+            type="text"
+            id="moduleTitle"
+            placeholder="Ej: Variables y Tipos de Datos"
+          />
+        </div>
+
+        <div class="form-group">
+          <label for="moduleSubtitle">Subtítulo</label>
+          <input
+            type="text"
+            id="moduleSubtitle"
+            placeholder="Descripción breve del módulo"
+          />
+        </div>
+
+        <div class="form-group">
+          <label for="moduleIcon">Icono (Emoji)</label>
+          <input type="text" id="moduleIcon" placeholder="📚" maxlength="2" />
+        </div>
+
+        <div class="form-group">
+          <label for="moduleOrder">Orden</label>
+          <input type="number" id="moduleOrder" placeholder="1" min="1" />
+        </div>
+
+        <div class="form-group">
+          <label for="theoryContent">Contenido de Teoría (JSON)</label>
+          <div class="json-editor">
+            <textarea
+              id="theoryContent"
+              placeholder='{"sections": [{"title": "...", "content": "..."}]}'
+            ></textarea>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="practiceContent">Contenido de Práctica (JSON)</label>
+          <div class="json-editor">
+            <textarea
+              id="practiceContent"
+              placeholder='{"demos": [{"title": "...", "description": "..."}]}'
+            ></textarea>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="exercisesContent">Ejercicios (JSON)</label>
+          <div class="json-editor">
+            <textarea
+              id="exercisesContent"
+              placeholder='{"exercises": [{"title": "...", "difficulty": "easy"}]}'
+            ></textarea>
+          </div>
+        </div>
+
+        <div class="form-actions">
+          <button class="btn" onclick="closeModal()">Cancelar</button>
+          <button class="btn btn-primary" onclick="saveModule()">
+            Guardar Módulo
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const API_URL = 'http://localhost:3000/api';
+      let editingModuleId = null;
+
+      // Cargar módulos
+      async function loadModules() {
+        try {
+          const response = await fetch(`${API_URL}/modules`);
+          const data = await response.json();
+          renderModules(data.modules);
+        } catch (error) {
+          console.error('Error:', error);
+          alert('Error al cargar módulos');
+        }
+      }
+
+      // Renderizar módulos
+      function renderModules(modules) {
+        const grid = document.getElementById('modulesGrid');
+        grid.innerHTML = '';
+
+        modules.forEach((module) => {
+          const card = document.createElement('div');
+          card.className = 'module-card';
+          card.innerHTML = `
+                    <div class="module-header">
+                        <div>
+                            <div class="module-icon">${
+                              module.icon || '📚'
+                            }</div>
+                            <h3 class="module-title">${module.title}</h3>
+                        </div>
+                    </div>
+                    <p class="module-subtitle">${module.subtitle || ''}</p>
+                    <div class="module-actions">
+                        <button class="btn btn-small btn-edit" onclick="editModule(${
+                          module.id
+                        })">
+                            ✏️ Editar
+                        </button>
+                        <button class="btn btn-small btn-delete" onclick="deleteModule(${
+                          module.id
+                        })">
+                            🗑️ Eliminar
+                        </button>
+                    </div>
+                `;
+          grid.appendChild(card);
+        });
+      }
+
+      // Abrir modal para crear
+      function openCreateModal() {
+        editingModuleId = null;
+        document.getElementById('modalTitle').textContent =
+          'Crear Nuevo Módulo';
+        document.getElementById('moduleTitle').value = '';
+        document.getElementById('moduleSubtitle').value = '';
+        document.getElementById('moduleIcon').value = '📚';
+        document.getElementById('moduleOrder').value = '';
+        document.getElementById('theoryContent').value = JSON.stringify(
+          {
+            sections: [
+              {
+                title: 'Título de la sección',
+                content: 'Contenido de la sección',
+                concepts: [
+                  {
+                    icon: '💡',
+                    title: 'Concepto',
+                    description: 'Descripción del concepto',
+                  },
+                ],
+                codeExample: {
+                  language: 'javascript',
+                  code: '// Código de ejemplo',
+                },
+              },
+            ],
+          },
+          null,
+          2
+        );
+        document.getElementById('practiceContent').value = JSON.stringify(
+          {
+            demos: [
+              {
+                title: 'Demo Interactivo',
+                description: 'Descripción del demo',
+                starterCode: '// Código inicial',
+                hints: ['Pista 1', 'Pista 2'],
+              },
+            ],
+          },
+          null,
+          2
+        );
+        document.getElementById('exercisesContent').value = JSON.stringify(
+          {
+            exercises: [
+              {
+                id: 'ex1',
+                title: 'Ejercicio 1',
+                difficulty: 'easy',
+                description: 'Descripción del ejercicio',
+                starterCode: '// Tu código aquí',
+                hint: 'Pista del ejercicio',
+              },
+            ],
+          },
+          null,
+          2
+        );
+
+        document.getElementById('moduleModal').classList.add('show');
+      }
+
+      // Editar módulo
+      async function editModule(moduleId) {
+        editingModuleId = moduleId;
+        document.getElementById('modalTitle').textContent = 'Editar Módulo';
+
+        try {
+          const response = await fetch(`${API_URL}/modules/${moduleId}`);
+          const data = await response.json();
+
+          document.getElementById('moduleTitle').value = data.module.title;
+          document.getElementById('moduleSubtitle').value =
+            data.module.subtitle || '';
+          document.getElementById('moduleIcon').value =
+            data.module.icon || '📚';
+          document.getElementById('moduleOrder').value =
+            data.module.order_index;
+
+          document.getElementById('theoryContent').value = JSON.stringify(
+            data.content.theory || {},
+            null,
+            2
+          );
+          document.getElementById('practiceContent').value = JSON.stringify(
+            data.content.practice || {},
+            null,
+            2
+          );
+          document.getElementById('exercisesContent').value = JSON.stringify(
+            data.content.exercises || {},
+            null,
+            2
+          );
+
+          document.getElementById('moduleModal').classList.add('show');
+        } catch (error) {
+          console.error('Error:', error);
+          alert('Error al cargar el módulo');
+        }
+      }
+
+      // Guardar módulo
+      async function saveModule() {
+        const moduleData = {
+          title: document.getElementById('moduleTitle').value,
+          subtitle: document.getElementById('moduleSubtitle').value,
+          icon: document.getElementById('moduleIcon').value,
+          order_index:
+            parseInt(document.getElementById('moduleOrder').value) || 999,
+        };
+
+        try {
+          moduleData.theory = JSON.parse(
+            document.getElementById('theoryContent').value
+          );
+          moduleData.practice = JSON.parse(
+            document.getElementById('practiceContent').value
+          );
+          moduleData.exercises = JSON.parse(
+            document.getElementById('exercisesContent').value
+          );
+        } catch (error) {
+          alert('Error en el formato JSON. Por favor verifica la sintaxis.');
+          return;
+        }
+
+        const url = editingModuleId
+          ? `${API_URL}/modules/${editingModuleId}`
+          : `${API_URL}/modules`;
+
+        const method = editingModuleId ? 'PUT' : 'POST';
+
+        try {
+          const response = await fetch(url, {
+            method: method,
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(moduleData),
+          });
+
+          if (response.ok) {
+            alert('Módulo guardado exitosamente');
+            closeModal();
+            loadModules();
+          } else {
+            alert('Error al guardar el módulo');
+          }
+        } catch (error) {
+          console.error('Error:', error);
+          alert('Error al guardar el módulo');
+        }
+      }
+
+      // Eliminar módulo
+      async function deleteModule(moduleId) {
+        if (!confirm('¿Estás seguro de eliminar este módulo?')) {
+          return;
+        }
+
+        try {
+          const response = await fetch(`${API_URL}/modules/${moduleId}`, {
+            method: 'DELETE',
+          });
+
+          if (response.ok) {
+            alert('Módulo eliminado exitosamente');
+            loadModules();
+          } else {
+            alert('Error al eliminar el módulo');
+          }
+        } catch (error) {
+          console.error('Error:', error);
+          alert('Error al eliminar el módulo');
+        }
+      }
+
+      // Cerrar modal
+      function closeModal() {
+        document.getElementById('moduleModal').classList.remove('show');
+      }
+
+      // Cargar módulos al iniciar
+      loadModules();
+    </script>
+  </body>
+</html>
